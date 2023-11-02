@@ -1,0 +1,16 @@
+[tool.poetry]
+authors = ["Shrikanth Upadhayaya <shrik450@gmail.com>"]
+description = "AI Query Optimizer"
+name = "aqo"
+readme = "README.md"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.scripts]
+aqo = "aqo.cli:main"
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
