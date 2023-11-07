@@ -4,7 +4,7 @@ This is a course project for CS 5614 (DBMS) at Virginia Tech. Our group consists
 of:
 
 - Parth Bapat - @bapatanuparth
-- [Shreyas Pawar]()
+- Shreyas Pawar - @Roarke-Rey
 - Shrikanth Upadhayaya - @shrik450
 
 ## Introduction

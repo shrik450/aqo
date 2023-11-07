@@ -6,6 +6,8 @@ readme = "README.md"
 version = "0.1.0"
 
 [tool.poetry.dependencies]
+mysql-connector-python = "^8.2.0"
+psycopg2 = "^2.9.9"
 python = "^3.11"
 
 [tool.poetry.scripts]
