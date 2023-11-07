@@ -23,7 +23,13 @@ class AQOShell(Cmd):
         if args == "EOF":
             return self.do_quit(args)
 
-        print(args)
+        cursor = self.database.cursor()
+        cursor.execute(args)
+        results = list(cursor.fetchall())
+        cursor.close()
+        print(f"{len(results)} rows returned.")
+        for row in results:
+            print(row)
 
     def do_help(self, args):
         """List available commands with "help" or detailed help with "help cmd"."""
