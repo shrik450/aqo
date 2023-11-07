@@ -2,6 +2,7 @@ import argparse
 import readline  # noqa: F401
 
 from cmd import Cmd
+from tabulate import tabulate
 
 from aqo.config import Config
 from aqo.db import Database
@@ -23,19 +24,37 @@ class AQOShell(Cmd):
         if args == "EOF":
             return self.do_quit(args)
 
-        cursor = self.database.cursor()
-        cursor.execute(args)
-        results = list(cursor.fetchall())
-        cursor.close()
-        print(f"{len(results)} rows returned.")
-        for row in results:
-            print(row)
+        try:
+            results, headers, rowcount, query_time = self.database.query(args)
+            max_results = 50
+            results_as_list = []
+
+            for row in results:
+                results_as_list.append(list(row))
+                if len(results_as_list) >= max_results:
+                    break
+            results = results_as_list
+
+            print(f"{rowcount} rows returned in {query_time} seconds.")
+            if rowcount > max_results:
+                print(f"Showing first {max_results} results.")
+            print(tabulate(results, headers=headers, tablefmt="rounded_outline"))
+        except Exception as e:
+            print("Error: Query failed to run. Details of error: ")
+            print(e)
 
     def do_help(self, args):
         """List available commands with "help" or detailed help with "help cmd"."""
-        print("Use this shell to interact with your database, and to run queries.")
-        print("Just enter a SQL query to get started.")
+
+        if len(args) == 0:
+            print("Use this shell to interact with your database, and to run queries.")
+            print("Just enter a SQL query to get started.")
+
         super().do_help(args)
+
+    def do_schema(self, _):
+        """Show the database schema."""
+        print(self.database.schema)
 
     def do_quit(self, _):
         """Quit the shell."""
@@ -61,7 +80,7 @@ class AQOShell(Cmd):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AQO Shell")
+    parser = argparse.ArgumentParser(description="AQO: AI Query Optimizer")
     parser.add_argument("config_file_path", type=str, help="path to the config file")
     args = parser.parse_args()
 
