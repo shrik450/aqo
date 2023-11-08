@@ -72,6 +72,18 @@ class Database:
             cursor.close()
             return [], [], 0, end_time - start_time
 
+    def explain_query(self, query: str) -> str:
+        """
+        Run an EXPLAIN query on the DB and return the output.
+        """
+
+        cursor = self.cursor()
+        cursor.execute(f"EXPLAIN ANALYZE {query}")
+        explain_output = cursor.fetchall()
+        cursor.close()
+
+        return "\n".join([row[0] for row in explain_output])
+
     @cached_property
     def schema(self) -> str:
         """

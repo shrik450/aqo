@@ -1,4 +1,5 @@
 import argparse
+import json
 import readline  # noqa: F401
 
 from cmd import Cmd
@@ -6,6 +7,7 @@ from tabulate import tabulate
 
 from aqo.config import Config
 from aqo.db import Database
+from aqo.llm import LLM
 
 
 class AQOShell(Cmd):
@@ -39,6 +41,33 @@ class AQOShell(Cmd):
             if rowcount > max_results:
                 print(f"Showing first {max_results} results.")
             print(tabulate(results, headers=headers, tablefmt="rounded_outline"))
+
+            query_explain = self.database.explain_query(args)
+            print("Query EXPLAIN results:")
+            print(query_explain)
+
+            print("Checking for optimizations...")
+
+            result = self.llm.optimize(self.database.schema, args, query_explain)
+            try:
+                advice = json.loads(result["choices"][0]["message"]["content"])
+                print("LLM advice:")
+                print("-" * 10)
+                print("Query-related advice:")
+                print(advice["query_advice"])
+                print("Suggested query:")
+                print(advice["query_optimized"])
+                print("-" * 10)
+                print("Schema-related advice:")
+                print(advice["schema_advice"])
+                print("Suggested schema:")
+                print(advice["schema_optimized"])
+                print("-" * 10)
+                print("Explanation for advice:")
+                print(advice["explanation"])
+            except:
+                print("Error: LLM provided bad response.")
+
         except Exception as e:
             print("Error: Query failed to run. Details of error: ")
             print(e)
@@ -70,6 +99,7 @@ class AQOShell(Cmd):
 
         print(self.intro)
         self.database = Database(self.config)
+        self.llm = LLM(self.config)
         print("Connected to database.")
         while True:
             try:

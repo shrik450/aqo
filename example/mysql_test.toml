@@ -1,7 +1,12 @@
 [database]
 host = 'localhost'
-name = 'employees'
+name = 'spm_f23'
 password = 'password'
 port = 3306
 type = 'mysql'
 username = 'aqo'
+
+[ai_model]
+api_base = 'http://127.0.0.1:11434'
+model_name = 'zephyr'
+provider = 'ollama'
