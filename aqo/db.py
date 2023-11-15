@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from functools import cached_property
 import subprocess
 import time
@@ -12,6 +13,19 @@ from typing import TYPE_CHECKING, Iterable, Tuple
 
 if TYPE_CHECKING:
     from _typeshed.dbapi import DBAPIConnection, DBAPICursor
+
+
+@dataclass
+class QueryResult:
+    """
+    A class to represent the result of a query. This is used to return the
+    result of a query as JSON.
+    """
+
+    headers: list[str]
+    results: list[list[str]]
+    rowcount: int
+    query_time: float
 
 
 class Database:
@@ -72,6 +86,30 @@ class Database:
             cursor.close()
             return [], [], 0, end_time - start_time
 
+    def query_as_json(self, query: str) -> QueryResult:
+        """
+        Run a query on the DB and return the results as a JSON object.
+        """
+
+        results, headers, rowcount, query_time = self.query(query)
+        max_n = 50
+        n = 0
+
+        results_as_list = []
+        for row in results:
+            if n >= max_n:
+                break
+
+            results_as_list.append(list(row))
+            n += 1
+
+        return QueryResult(
+            headers=headers,
+            results=results_as_list,
+            rowcount=rowcount,
+            query_time=query_time,
+        )
+
     def explain_query(self, query: str) -> str:
         """
         Run an EXPLAIN query on the DB and return the output.
@@ -87,7 +125,7 @@ class Database:
     @cached_property
     def schema(self) -> str:
         """
-        Return the schema of the database as a string. Each dat
+        Return the schema of the database as a string.
         """
 
         host = self.config.db_host

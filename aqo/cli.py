@@ -112,7 +112,21 @@ class AQOShell(Cmd):
 def main():
     parser = argparse.ArgumentParser(description="AQO: AI Query Optimizer")
     parser.add_argument("config_file_path", type=str, help="path to the config file")
+    parser.add_argument(
+        "command",
+        type=str,
+        help="command to run",
+        nargs="?",
+        choices=["shell", "serve"],
+        default="shell",
+        const="shell",
+    )
     args = parser.parse_args()
 
-    shell = AQOShell(args.config_file_path)
-    shell.cmdloop()
+    if args.command == "serve":
+        from aqo.server import start_server
+
+        start_server(args.config_file_path)
+    else:
+        shell = AQOShell(args.config_file_path)
+        shell.cmdloop()
