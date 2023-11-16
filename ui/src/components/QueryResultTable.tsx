@@ -9,17 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const caption = (queryResult: QueryResult): string => {
-  const queryTime = queryResult.query_time * 1000; // convert to ms
-  const queryTimeStr = queryTime.toFixed(2);
-  const baseCaption = `Fetched ${queryResult.rowcount} rows in ${queryTimeStr}ms.`;
-  if (queryResult.rowcount === queryResult.results.length) {
-    return baseCaption;
-  } else {
-    return `${baseCaption} (Limited to ${queryResult.results.length} rows)`;
-  }
-};
+import { caption } from "@/lib/utils";
 
 export default function QueryResultTable({
   queryResult,

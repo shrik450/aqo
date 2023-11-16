@@ -34,6 +34,7 @@ class API:
         self.router.add_api_route("/database", self.database_details, methods=["GET"])
         self.router.add_api_route("/schema", self.schema, methods=["GET"])
         self.router.add_api_route("/query", self.run_query, methods=["POST"])
+        self.router.add_api_route("/optimize", self.optimize_query, methods=["POST"])
 
     def status(self):
         """Healthcheck route for the UI."""
@@ -50,6 +51,12 @@ class API:
     def run_query(self, query: Query):
         """Run a query on the connected database."""
         return self.db.query_as_json(query.query)
+
+    def optimize_query(self, query: Query):
+        """Optimize a query using LLM."""
+        return self.llm.optimize_as_json(
+            self.db.schema, query.query, self.db.explain_query(query.query)
+        )
 
 
 def start_server(config_path: str) -> None:

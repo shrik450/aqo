@@ -1,28 +1,32 @@
-import { fetchSchema, type Schema as SchemaType } from "@/lib/api";
-import { useState, type ReactElement, useEffect } from "react";
+import { type Schema as SchemaType, fetchSchema } from "@/lib/api";
+import { type ReactElement, useEffect } from "react";
 import { format } from "sql-formatter";
 import CodeEditor from "@uiw/react-textarea-code-editor";
 import CopyButton from "@/components/CopyButton";
+import { type Store, useStore } from "@/lib/store";
 
-type PageState = "loading" | "loaded" | "error";
+const statePicker = (
+  state: Store,
+): [SchemaType | null, (schema: SchemaType) => void] => [
+  state.schema,
+  state.setSchema,
+];
 
 export default function Schema(): ReactElement {
-  const [schema, setSchema] = useState<SchemaType | null>(null);
-  const [state, setState] = useState<PageState>("loading");
+  const [schema, setSchema] = useStore(statePicker);
 
   useEffect(() => {
-    if (schema === null && state === "loading") {
+    if (schema === null) {
       void (async () => {
         const newSchema = await fetchSchema();
         setSchema(newSchema);
-        setState("loaded");
       })();
     }
-  }, [schema, setSchema, state, setState]);
+  }, [schema, setSchema]);
 
-  return state === "loading" ? (
+  return schema === null ? (
     <p>Loading Schema...</p>
-  ) : schema !== null && schema !== undefined ? (
+  ) : schema !== undefined ? (
     <div className="flex flex-col">
       <CodeEditor
         value={format(schema.schema)}

@@ -1,11 +1,23 @@
 from __future__ import annotations
+from dataclasses import dataclass
+import json
 
 import os
-from typing import Iterable
+from typing import Optional
 
 from litellm import completion
 
 from aqo.config import Config
+
+
+@dataclass
+class OptimizationResult:
+    query_advice: str
+    schema_advice: str
+    query_optimized: str
+    schema_optimized: str
+    explanation: str
+    error: Optional[str] = None
 
 
 class LLM:
@@ -27,6 +39,7 @@ class LLM:
     query_optimized: The optimized query.
     schema_optimized: A DDL statement that can be used to optimize the schema, if possible, to improve performance of this query.
     explanation: An explanation of why the query or schema is slow, and why the advice you gave will help.
+    error: Errors, if any. Otherwise, null.
 
     Your response MUST be exactly in the format specified above, with no additional
     content.
@@ -83,6 +96,33 @@ class LLM:
             messages=messages,
             api_base=self.config.ai_api_base,
         )
+
+    def optimize_as_json(
+        self, database_schema: str, slow_query: str, explain_output: str
+    ) -> OptimizationResult:
+        result = self.optimize(database_schema, slow_query, explain_output)
+        advice = result["choices"][0]["message"]["content"]
+        try:
+            json_advice = json.loads(advice)
+            return OptimizationResult(**json_advice)
+        except json.JSONDecodeError:
+            return OptimizationResult(
+                query_advice="",
+                schema_advice="",
+                query_optimized="",
+                schema_optimized="",
+                explanation="",
+                error="Error: LLM returned invalid JSON.",
+            )
+        except Exception as e:
+            return OptimizationResult(
+                query_advice="",
+                schema_advice="",
+                query_optimized="",
+                schema_optimized="",
+                explanation="",
+                error=f"Error: LLM returned invalid response. Details: {e}",
+            )
 
     def _litellm_model(self) -> str:
         if self.config.ai_provider == "openai":
