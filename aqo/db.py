@@ -9,7 +9,7 @@ import psycopg2
 
 from aqo.config import Config
 
-from typing import TYPE_CHECKING, Iterable, Tuple
+from typing import TYPE_CHECKING, Iterable, Optional, Tuple
 
 if TYPE_CHECKING:
     from _typeshed.dbapi import DBAPIConnection, DBAPICursor
@@ -26,6 +26,8 @@ class QueryResult:
     results: list[list[str]]
     rowcount: int
     query_time: float
+    explain: str
+    query_error: Optional[str] = None
 
 
 class Database:
@@ -91,24 +93,36 @@ class Database:
         Run a query on the DB and return the results as a JSON object.
         """
 
-        results, headers, rowcount, query_time = self.query(query)
-        max_n = 50
-        n = 0
+        try:
+            results, headers, rowcount, query_time = self.query(query)
+            max_n = 50
+            n = 0
 
-        results_as_list = []
-        for row in results:
-            if n >= max_n:
-                break
+            results_as_list = []
+            for row in results:
+                if n >= max_n:
+                    break
 
-            results_as_list.append(list(row))
-            n += 1
+                results_as_list.append(list(row))
+                n += 1
 
-        return QueryResult(
-            headers=headers,
-            results=results_as_list,
-            rowcount=rowcount,
-            query_time=query_time,
-        )
+            return QueryResult(
+                headers=headers,
+                results=results_as_list,
+                rowcount=rowcount,
+                query_time=query_time,
+                query_error=None,
+                explain=self.explain_query(query),
+            )
+        except Exception as e:
+            return QueryResult(
+                headers=[],
+                results=[],
+                rowcount=0,
+                query_time=0,
+                query_error=str(e),
+                explain="",
+            )
 
     def explain_query(self, query: str) -> str:
         """

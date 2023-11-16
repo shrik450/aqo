@@ -1,6 +1,8 @@
 # AQO as an API, primarily for use with the AQO React UI.
 
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
 import uvicorn
 
@@ -52,6 +54,11 @@ class API:
 
 def start_server(config_path: str) -> None:
     app = FastAPI()
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins="*",
+        allow_methods=["GET", "POST"],
+    )
     api = API(config_path)
     app.include_router(api.router)
     uvicorn.run(app, host="localhost", port=8000)
